@@ -18,15 +18,48 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class CrawlingService:
-   @classmethod
-   def crawl(self, keyword=None):
-      raise NotImplementedError
+   def crawl(self):
+      raise NotImplementedError("crawl method must be implemented in subclass")
+
 
 class GoogleNewsCrawlingService(CrawlingService):
-   
+   pass
+
 
 class BingNewsCrawlingService(CrawlingService):
+   pass
 
 
 class BloggerCrawlingService(CrawlingService):
+   pass
+
+
+class TwitterCrawlingService(CrawlingService):
+   import tweepy
+   from logger import crawl_logs
+   class StreamingLib(tweepy.StreamListener):
+      def __init__(self):
+         tweepy.StreamListener.__init__(self)
+         crawl_logs(['instantiated new Stream Listener'])
+
+      def on_status(self, status):
+         #Create a model and save to couchdb
+         pass
+
+      def on_error(self, status_code):
+         crawl_logs(['an error with status code %s occured' % (status_code)])
+         return True
+
+      def on_timeout(self):
+         crawl_logs(['connection timed out.'])
    
+   def crawl(self):
+      stream = tweepy.Stream('cscyberspace1','zxcrty09()', StreamingLib(),
+                  timeout=60.0)
+      track_list = ['aapl', 'apple', 'goog', 'google', 'msft', 'microsoft',
+                     'obama', 'beiber', 'justin', 'soccer', 'south africa']
+      
+      try:
+         stream.filter(None, track=track_list)
+      except:
+         crawl_logs(['a fatal exception occured', 'ending stream...'])

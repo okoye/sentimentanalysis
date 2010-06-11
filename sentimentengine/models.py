@@ -19,7 +19,7 @@
 
 
 
-class TwitterMessage(db.Model):
+class TwitterMessage():
    date_time_generated = db.DateTimeProperty()
    identified_entities = db.StringListProperty()
    entity_extract_flag = db.BooleanProperty()
