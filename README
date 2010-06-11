@@ -1,0 +1,12 @@
+An simple sentiment engine that identifies positive and negative sentiments
+and their associated entities.
+
+
+dependencies:
+-Tweepy
+-Couchdb
+-Couchdbkit
+
+
+TODO:
+Implement views for all objects whose sentiments have not been extracted.
