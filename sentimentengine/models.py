@@ -17,14 +17,11 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from couchdbkit import *
 
-
-class TwitterMessage():
-   date_time_generated = db.DateTimeProperty()
-   identified_entities = db.StringListProperty()
-   entity_extract_flag = db.BooleanProperty()
-   sentiment_scores = db.BlobProperty()
-   sentiment_score_flag = db.BooleanProperty()
-   text_data = db.StringProperty()
-   id = db.StringProperty()
-   user_name = db.StringProperty()
+class TwitterMessage(Document):
+   date_time_generated = schema.DateTimeProperty()
+   identified_entities = schema.DictProperty()
+   text_message = schema.StringProperty(required=True)
+   message_id = schema.StringProperty(required=True)
+   user_name = schema.StringProperty(required=True)

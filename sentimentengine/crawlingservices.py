@@ -19,6 +19,15 @@
 
 import tweepy
 from logger import crawl_logs
+from models import TwitterMessage
+from couchdbkit import Server
+
+#Instantiate elements server and database
+server = Server()
+db = server.get_or_create_db('crawls')
+
+#Associate all models with Couchdb 
+TwitterMessage.set_db(db)
 
 class CrawlingService:
    def crawl(self):
@@ -37,14 +46,18 @@ class BloggerCrawlingService(CrawlingService):
    pass
 
 class TwitterCrawlingService(CrawlingService):
-   
+
    class StreamingLib(tweepy.StreamListener):
       def __init__(self):
          tweepy.StreamListener.__init__(self)
          crawl_logs(['instantiated new Stream Listener'])
 
       def on_status(self, status):
-         crawl_logs(['received new status'])
+         message = TwitterMessage(date_time_generated=status.created_at,
+                                    text_message = status.text,
+                                    message_id = str(status.id),
+                                    user_name = status.author.screen_name)
+         message.save()
 
       def on_error(self, status_code):
          crawl_logs(['an error with status code %s occured' % (status_code)])
