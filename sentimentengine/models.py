@@ -18,8 +18,6 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from google.appengine.ext import db
-from google.appengine.ext.db import polymodel
 
 class TwitterMessage(db.Model):
    date_time_generated = db.DateTimeProperty()

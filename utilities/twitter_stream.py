@@ -6,7 +6,7 @@ import os
 
 class StreamingLogger(tweepy.StreamListener):
    def __init__(self):
-      self.tweepy.StreamListener.__init__(self)
+      tweepy.StreamListener.__init__(self)
       self.counter = 0
       self.file_path = os.path.join(os.path.dirname(__file__), 'dumps.csv')
       self.csv_writer = csv.writer(open(self.file_path,'w'), delimiter=',')
@@ -27,12 +27,13 @@ class StreamingLogger(tweepy.StreamListener):
       print "Connection timed out!"
 
 def main():
-   stream = tweepy.Stream('cscyberspace1','zxcrty09()', StreamingLogger(),\
-               timeout=None)
+   stream = tweepy.Stream('cscyberspace1','zxcrty09()', StreamingLogger(),
+               timeout=6.0)
 
    track_list = ['Apple', 'Google', 'Microsoft', 'Obama', 'Beiber', 'Justin']
-
-   stream.filter(None,track_list)
+   print "starting stream..."
+   stream.sample()#filter(None,track=track_list)
+   print "ending stream..."
 
 if __name__ == '__main__':
    try:
