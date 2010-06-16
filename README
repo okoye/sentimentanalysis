@@ -11,8 +11,7 @@ dependencies:
 TODO:
 Implement views for all objects whose sentiments have not been extracted.
 Re-write POS classifier
-Merge my POS classifier with UnigramTagger and BigramTagger.
-Train and Pickle POS classifier
+Pickle POS classifier and compare with HMM Based one.
 Gather list of positive and negative sentiment words.
 Implement rules described in paper
 Test hypothesis of using bounds like 'worst' and 'best' to create segmenting

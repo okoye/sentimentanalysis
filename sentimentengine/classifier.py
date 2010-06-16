@@ -31,56 +31,55 @@ class SpeechTagger(TaggerI):
          untagged_sent = untag(sentence)
          history = []
          for indices, (word, tag) in enumerate(sentence):
-               train_set.append((feature_extract(untagged_sent,indices,
+               train_set.append((spfeature_extract(untagged_sent,indices,
                                history),tag))
                history.append(tag)
 
       self.bayes_classifier = naivebayes.NaiveBayesClassifier.train(train_set)  
-      #self.decisiont_classifier = decisiontree.DecisionTreeClassifier.train(
-                                    #train_set, depth_cutoff=400)
    
    def tag(self, sentence):
       history = []
       for i, word in enumerate(sentence):
-         tag1=self.bayes_classifier.classify(feature_extract(sentence,i,history))
-       #  tag2=self.decisiont_classifier.classify(feature_extract(sentence,i,
-                                             #history))
+         tag1=self.bayes_classifier.classify(spfeature_extract(sentence,i,history))
          history.append(tag1)
       return zip(sentence, history)
 
 
-def feature_extract(sentence,word_index, history):
+def spfeature_extract(sentence,word_index, history):
    features = {}
    if word_index == 0:
-      features["previous_tag"] = "<start>"
-      features["previous_suffix2"] = "<start>"
+      features["p_tag"] = "<start>"
+      features["p_suffix"] = "<start>"
    else:
-      features["previous_tag"] = history[word_index-1]
-      features["previous_suffix2"] = sentence[word_index-1][-2:]
+      features["p_tag"] = history[word_index-1]
+      features["p_suffix"] = sentence[word_index-1][-2:]
 
    if word_index == len(sentence)-1:
-      features["next_suffix2"] = "<end>"
+      features["n_suffix"] = "<end>"
    else:
-      features["next_suffix2"] = sentence[word_index+1][-2:]
+      features["n_suffix"] = sentence[word_index+1][-2:]
 
-   features["current_suffix2"] = sentence[word_index][-2:]
-   features["current_suffix1"] = sentence[word_index][-1:]
-   features["current_suffix3"] = sentence[word_index][-3:]
-   features["current_length"] = len(sentence[word_index])
+   features["c_suffix2"] = sentence[word_index][-2:]
+   features["c_suffix1"] = sentence[word_index][-1:]
+   features["c_suffix3"] = sentence[word_index][-3:]
+   features["c_length"] = len(sentence[word_index])
   
    return features
 
 
 def testClassifier():
-   from nltk.corpus import brown
+   from nltk.corpus import brown, conll2000, treebank
 
-   tagged_sents = brown.tagged_sents()
+   #tagged_sents = brown.tagged_sents()
+   tagged_sents = conll2000.tagged_sents()# + treebank.tagged_sents()
    train = tagged_sents[:int(0.8*len(tagged_sents))]
    test = tagged_sents[int(0.8*len(tagged_sents)):]
 
    posTagger = SpeechTagger(train)
-   print "Classifier training completed"
+   print "training on ", len(test)
    print posTagger.evaluate(test) 
+   print "training on ", len(treebank.tagged_sents())
+   print posTagger.evaluate(treebank.tagged_sents()[:2000])
 
 
 if __name__ == "__main__":
