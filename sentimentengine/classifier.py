@@ -17,7 +17,6 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#   Refer to NLTK Manual (Chapter 06 & 07)
 
 from nltk.tag import *
 from nltk.classify import naivebayes, maxent, decisiontree
@@ -68,14 +67,14 @@ def feature_extract(sentence,word_index, history):
    features["current_suffix1"] = sentence[word_index][-1:]
    features["current_suffix3"] = sentence[word_index][-3:]
    features["current_length"] = len(sentence[word_index])
-
+  
    return features
 
 
 def testClassifier():
    from nltk.corpus import brown
 
-   tagged_sents = brown.tagged_sents(categories='news')
+   tagged_sents = brown.tagged_sents()
    train = tagged_sents[:int(0.8*len(tagged_sents))]
    test = tagged_sents[int(0.8*len(tagged_sents)):]
 
