@@ -73,11 +73,30 @@ class SpeechTagger:
 
       print 'Accuracy: %f' % (100*self.classifier.evaluate(test))
 
+   def retrain(self, train_data):
+      '''Attempts to retrain the brill tagger using the specified data''' 
+      #TODO: Retrain naive bayes classifier also
+      brill_trainer = FastBrillTaggerTrainer(initial_tagger = self.bayes,
+                                             templates = templates,
+                                             trace = 3,
+                                             deterministic = True)
+
+      try:
+         self.classifier = brill_trainer.train(train_data, max_rules=10)
+         output = open('tagger.pickle', 'wb')
+         dump(self.classifier, output, 1)
+         output.close()
+      except:
+         print "Failed to retrain brill tagger"
+
+   def tag(self, untagged_sentences):
+      '''Tags all sentences provided in the dict untagged_sentences'''
+
+      pass
 
 class NaiveBayesTagger(TaggerI):
 
    def __init__(self):
-      #First, we train the naive bayes classifier
       train_naive = brown.tagged_sents(categories="news")
       temp_train_data = []
       for sentence in train_naive:
