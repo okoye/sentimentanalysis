@@ -36,13 +36,12 @@ templates = [
                ProximateTokensTemplate(ProximateTagsRule, (-1,-1), (1,1)),
                ProximateTokensTemplate(ProximateWordsRule, (-1,-1), (1,1)),
             ]
-
+file = "tagger.pickle"
 class SpeechTagger:
    
    def __init__(self):
       '''initialize and train brill and naive bayes classifiers'''
       
-      file = "tagger.pickle" 
       if exists(file):
          input = open(file, 'rb')
          self.classifier = load(input)
@@ -52,7 +51,7 @@ class SpeechTagger:
 
       self.bayes = NaiveBayesTagger()
 
-      train = brown.tagged_sents(categories="news")
+      train = brown.tagged_sents()
 
       brill_trainer = FastBrillTaggerTrainer(initial_tagger = self.bayes,
                                              templates = templates,
@@ -62,16 +61,18 @@ class SpeechTagger:
       self.classifier = brill_trainer.train(train, max_rules=10)
          
       print 'Saving Taggers to file: "pos_tagger.pickle"'
-      output = open('tagger.pickle', 'wb')
+      output = open(file, 'wb')
       dump(self.classifier, output, 1)
       output.close()
 
    def evaluate(self):
       '''run tests on conll2000 and treebank data'''
 
-      test = conll2000.tagged_sents() + treebank.tagged_sents()
+      test = treebank.tagged_sents()
+      print 'Accuracy on treebank: %f%%' % (100*self.classifier.evaluate(test))
 
-      print 'Accuracy: %f' % (100*self.classifier.evaluate(test))
+      test = conll2000.tagged_sents()
+      print 'Accuracy on conll2000: %f%%' %(100*self.classifier.evaluate(test))
 
    def retrain(self, train_data):
       '''Attempts to retrain the brill tagger using the specified data''' 
@@ -83,7 +84,7 @@ class SpeechTagger:
 
       try:
          self.classifier = brill_trainer.train(train_data, max_rules=10)
-         output = open('tagger.pickle', 'wb')
+         output = open(file, 'wb')
          dump(self.classifier, output, 1)
          output.close()
       except:
@@ -97,7 +98,7 @@ class SpeechTagger:
 class NaiveBayesTagger(TaggerI):
 
    def __init__(self):
-      train_naive = brown.tagged_sents(categories="news")
+      train_naive = brown.tagged_sents()
       temp_train_data = []
       for sentence in train_naive:
          untagged_sent = untag(sentence)
