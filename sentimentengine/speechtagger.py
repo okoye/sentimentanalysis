@@ -41,6 +41,23 @@ class SpeechTagger:
    def __init__(self):
       '''initialize and train brill and naive bayes classifiers'''
       
+      self.bayes = NaiveBayesTagger()
+
+      train = brown.tagged_sents(categories="news")
+
+      brill_trainer = FastBrillTaggerTrainer(initial_tagger = self.bayes,
+                                             templates = templates,
+                                             trace = 3,
+                                             deterministic = True)
+         
+      self.classifier = brill_trainer.train(train, max_rules=10)
+         
+      print 'Saving Taggers to file: "pos_tagger.pickle"'
+      cPickle.dump(self.classifier, file('pos_tagger.pickle', 'w'), 2)
+
+class NaiveBayesTagger(TaggerI):
+
+   def __init__(self):
       #First, we train the naive bayes classifier
       train_naive = brown.tagged_sents(categories="news")
       temp_train_data = []
@@ -48,23 +65,24 @@ class SpeechTagger:
          untagged_sent = untag(sentence)
          history = []
          for i, (word, tag) in enumerate(sentence):
-            temp_train_data.append((self.featextract(untagged_sent, i,
-                                    history),tag))
+            temp_train_data.append((self.featextract(untagged_sent,
+                                                      i,
+                                                      history),
+                                                      tag))
             history.append(tag)
+      self.bayes=naivebayes.NaiveBayesClassifier.train(temp_train_data)
 
-         self.bayes=naivebayes.NaiveBayesClassifier.train(temp_train_data)
-         print 'Finished training initial tagger'
+   def tag(self, sentence):
+      tagged_sentence = []
+      history = []
+      for i, word in enumerate(sentence):
+         tag=self.bayes.classify(self.featextract(sentence,
+                                                   i,
+                                                   history))
+         tagged_sentence.append((word,tag))
+         history.append(tag)
+      return tagged_sentence
 
-         brill_trainer = FastBrillTaggerTrainer(initial_tagger = self.bayes,
-                                                templates = templates,
-                                                trace = 3,
-                                                deterministic = True)
-         
-         self.classifier = brill_trainer.train(train_naive, max_rules=10)
-         
-         print 'Saving Taggers to file: "pos_tagger.pickle"'
-         cPickle.dump(self.classifier, file('pos_tagger.pickle', 'w'), 2)
-   
 
    @classmethod
    def featextract(self, sentence, i, history, mode="bayes"):
