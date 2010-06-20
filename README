@@ -10,8 +10,9 @@ dependencies:
 
 TODO:
 Implement views for all objects whose sentiments have not been extracted.
-Re-write POS classifier
-Pickle POS classifier and compare with HMM Based one.
+Design analytical engine
+Re-write POS classifier using Brill Tagger and NaiveBayes based classifier
+Pickle POS classifier.
 Gather list of positive and negative sentiment words.
 Implement rules described in paper
 Test hypothesis of using bounds like 'worst' and 'best' to create segmenting

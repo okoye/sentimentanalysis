@@ -17,38 +17,88 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from nltk.tag import TaggerI, hmm, untag
-from nltk.classify import naivebayes, maxent
-from nltk import TaggerI
 from nltk.corpus import brown, conll2000, treebank
+from nltk.classify import naivebayes
+from nltk.tag import untag
+from nltk.tag.brill import *
+import cPickle
 
-class SpeechTagger(TaggerI):
+templates = [
+               SymmetricProximateTokensTemplate(ProximateTagsRule, (1,1)),
+               SymmetricProximateTokensTemplate(ProximateTagsRule, (2,2)),
+               SymmetricProximateTokensTemplate(ProximateTagsRule, (1,2)),
+               SymmetricProximateTokensTemplate(ProximateTagsRule, (1,3)),
+               SymmetricProximateTokensTemplate(ProximateWordsRule, (1,1)),
+               SymmetricProximateTokensTemplate(ProximateWordsRule, (2,2)),
+               SymmetricProximateTokensTemplate(ProximateWordsRule, (1,2)),
+               SymmetricProximateTokensTemplate(ProximateWordsRule, (1,3)),
+               ProximateTokensTemplate(ProximateTagsRule, (-1,-1), (1,1)),
+               ProximateTokensTemplate(ProximateWordsRule, (-1,-1), (1,1)),
+            ]
 
+class SpeechTagger:
+   
    def __init__(self):
-      '''train brill classifier'''
-      #tagged_sents = brown.tagged_sents(categories='news') 
-      #tagged_sents = conll2000.tagged_sents()
-           
+      '''initialize and train brill and naive bayes classifiers'''
+      
+      #First, we train the naive bayes classifier
+      train_naive = brown.tagged_sents(categories="news")
+      temp_train_data = []
+      for sentence in train_naive:
+         untagged_sent = untag(sentence)
+         history = []
+         for i, (word, tag) in enumerate(sentence):
+            temp_train_data.append((self.featextract(untagged_sent, i,
+                                    history),tag))
+            history.append(tag)
+
+         self.bayes=naivebayes.NaiveBayesClassifier.train(temp_train_data)
+         print 'Finished training initial tagger'
+
+         brill_trainer = FastBrillTaggerTrainer(initial_tagger = self.bayes,
+                                                templates = templates,
+                                                trace = 3,
+                                                deterministic = True)
+         
+         self.classifier = brill_trainer.train(train_naive, max_rules=10)
+         
+         print 'Saving Taggers to file: "pos_tagger.pickle"'
+         cPickle.dump(self.classifier, file('pos_tagger.pickle', 'w'), 2)
+   
+
+   @classmethod
+   def featextract(self, sentence, i, history, mode="bayes"):
+      '''extract features from data. relevant modes includes bayes'''
+
+      if mode == "bayes":
+         features = {}
+         if i == 0:
+            features['p_tag'] = "<start>"
+            features['p_suffix'] = "<start>"
+
+         else:
+            features['p_tag'] = history[i-1]
+            features['p_suffix'] = sentence[i-1][-2:]
+
+         if i == (len(sentence) - 1):
+            features['n_suffix'] = "<end>"
+         
+         else:
+            features['n_suffix'] = sentence[i+1][-2:]
+
+         features['suffix1'] = sentence[i][-1:]
+         features['suffix2'] = sentence[i][-2:]
+         features['suffix3'] = sentence[i][-3:]
+         features['length'] = len(sentence[i])
+
+         return features
+      
+      elif mode == "brill":
+         pass
 
 
-def _pos_features(sentence, i, history):
-   features = {}
-   if i == 0:
-      features["p_tag"] = "<start>"
-      features["p_suffix"] = "<start>"
-   else:
-      features["p_tag"] = history[i-1]
-      features["p_suffix"] = history[i-1][-2:]
 
-   if i == len(sentence) - 1:
-      features["n_suffix"] = "<end>"
-   else:
-      features["n_suffix"] = sentence[i+1][-2:]
-
-   features["c_suffix1"] = sentence[i][-1:]
-   features["c_suffix2"] = sentence[i][-2:]
-   features["c_suffix3"] = sentence[i][-3:]
-   features["current_length"] = len(sentence[i])
-
-   return features
+if __name__ == '__main__':
+   SpeechTagger()
+      
 
