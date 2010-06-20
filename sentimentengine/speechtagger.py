@@ -66,6 +66,14 @@ class SpeechTagger:
       dump(self.classifier, output, 1)
       output.close()
 
+   def evaluate(self):
+      '''run tests on conll2000 and treebank data'''
+
+      test = conll2000.tagged_sents() + treebank.tagged_sents()
+
+      print 'Accuracy: %f' % (100*self.classifier.evaluate(test))
+
+
 class NaiveBayesTagger(TaggerI):
 
    def __init__(self):
@@ -128,6 +136,6 @@ class NaiveBayesTagger(TaggerI):
 
 
 if __name__ == '__main__':
-   SpeechTagger()
-      
+   x = SpeechTagger()
+   x.evaluate()   
 

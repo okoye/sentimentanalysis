@@ -78,6 +78,9 @@ class TwitterCrawlingService(CrawlingService):
          crawl_logs(['a fatal exception occured', 'ending stream...'])
 
 
+class BackTypeCrawlingService(CrawlingService):
+   pass
+
 ################# Main Instance of Class #####################
 #Should be multi threaded for each crawling service offered.
 
