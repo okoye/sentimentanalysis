@@ -21,7 +21,8 @@ from nltk.corpus import brown, conll2000, treebank
 from nltk.classify import naivebayes
 from nltk.tag import untag
 from nltk.tag.brill import *
-import cPickle
+from nltk.data import load
+from os.path import exists
 
 templates = [
                SymmetricProximateTokensTemplate(ProximateTagsRule, (1,1)),
@@ -41,6 +42,14 @@ class SpeechTagger:
    def __init__(self):
       '''initialize and train brill and naive bayes classifiers'''
       
+      file = "pos_tagger.pickle" 
+      if exists(file):
+         input = open(file, 'rb')
+         self.classifier = load(input)
+         input.close()
+         print 'Successfully loaded saved classifier'
+         return
+
       self.bayes = NaiveBayesTagger()
 
       train = brown.tagged_sents(categories="news")
@@ -53,7 +62,7 @@ class SpeechTagger:
       self.classifier = brill_trainer.train(train, max_rules=10)
          
       print 'Saving Taggers to file: "pos_tagger.pickle"'
-      cPickle.dump(self.classifier, file('pos_tagger.pickle', 'w'), 2)
+      cPickle.dump(self.classifier, file('pos_tagger.pickle', 'wb'), -1)
 
 class NaiveBayesTagger(TaggerI):
 
