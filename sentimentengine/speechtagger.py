@@ -42,7 +42,7 @@ class SpeechTagger:
    def __init__(self):
       '''initialize and train brill and naive bayes classifiers'''
       
-      file = "pos_tagger.pickle" 
+      file = "tagger.pickle" 
       if exists(file):
          input = open(file, 'rb')
          self.classifier = load(input)
@@ -62,7 +62,9 @@ class SpeechTagger:
       self.classifier = brill_trainer.train(train, max_rules=10)
          
       print 'Saving Taggers to file: "pos_tagger.pickle"'
-      dump(self.classifier, file('pos_tagger.pickle', 'wb'), -1)
+      output = open('tagger.pickle', 'wb')
+      dump(self.classifier, output, 1)
+      output.close()
 
 class NaiveBayesTagger(TaggerI):
 
