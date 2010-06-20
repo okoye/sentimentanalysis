@@ -6,6 +6,8 @@ dependencies:
 -Tweepy
 -Couchdb
 -Couchdbkit
+-NLTK
+-PyML
 
 
 TODO:
