@@ -21,7 +21,7 @@ from nltk.corpus import brown, conll2000, treebank
 from nltk.classify import naivebayes
 from nltk.tag import untag
 from nltk.tag.brill import *
-from nltk.data import load
+from cPickle import dump, load
 from os.path import exists
 
 templates = [
@@ -62,7 +62,7 @@ class SpeechTagger:
       self.classifier = brill_trainer.train(train, max_rules=10)
          
       print 'Saving Taggers to file: "pos_tagger.pickle"'
-      cPickle.dump(self.classifier, file('pos_tagger.pickle', 'wb'), -1)
+      dump(self.classifier, file('pos_tagger.pickle', 'wb'), -1)
 
 class NaiveBayesTagger(TaggerI):
 
