@@ -50,8 +50,8 @@ class SpeechTagger:
          return
 
       self.bayes = NaiveBayesTagger()
-
-      train = brown.tagged_sents()
+      boundary = int(len(brown.tagged_sents())*0.8)
+      train = brown.tagged_sents()[:boundary]
 
       brill_trainer = FastBrillTaggerTrainer(initial_tagger = self.bayes,
                                              templates = templates,
@@ -69,10 +69,15 @@ class SpeechTagger:
       '''run tests on conll2000 and treebank data'''
 
       test = treebank.tagged_sents()
-      print 'Accuracy on treebank: %f%%' % (100*self.classifier.evaluate(test))
+      treebank_result = (100*self.classifier.evaluate(test))
 
       test = conll2000.tagged_sents()
-      print 'Accuracy on conll2000: %f%%' %(100*self.classifier.evaluate(test))
+      conll2000_result = (100*self.classifier.evaluate(test))
+
+      test = brown.tagged_sents()[int(len(brown.tagged_sents())*0.8):]
+      brown_result = (100*self.classifier.evaluate(test))
+
+      return (treebank_result, conll2000_result, brown_result)
 
    def retrain(self, train_data):
       '''Attempts to retrain the brill tagger using the specified data''' 
@@ -89,6 +94,9 @@ class SpeechTagger:
          output.close()
       except:
          print "Failed to retrain brill tagger"
+         return -1
+
+      return 0
 
    def tag(self, untagged_sentences):
       '''Tags all sentences provided in the dict untagged_sentences'''
@@ -98,7 +106,9 @@ class SpeechTagger:
 class NaiveBayesTagger(TaggerI):
 
    def __init__(self):
-      train_naive = brown.tagged_sents()
+
+      boundary = int(len(brown.tagged_sents())*0.8)
+      train_naive = brown.tagged_sents()[:boundary]
       temp_train_data = []
       for sentence in train_naive:
          untagged_sent = untag(sentence)
@@ -152,10 +162,4 @@ class NaiveBayesTagger(TaggerI):
       
       elif mode == "brill":
          pass
-
-
-
-if __name__ == '__main__':
-   x = SpeechTagger()
-   x.evaluate()   
 
