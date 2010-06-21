@@ -39,9 +39,27 @@ class TestSpeechTagger():
 
    def test_retrain(self):
       '''retrains only tagger with specified training data'''
-      train = brown.tagged_sents(categories="news")
+     train = brown.tagged_sents(categories="news")
       print "retrained: ", (self.atagger.retrain(train) != -1)
 
+   def test_tag(self):
+      untagged_sents = [
+                        "DJ Tiesto is the best!",
+                        "brb gonna take a quick shower and eat some dinner",
+                        "I totally love to play RPG games",
+                        "Did you see that moron tiger on the news WTF was
+                        he thinking?",
+                        "I think we should watch a new movie this weekend"
+                        "I want to play left for dead two ASAP it looks great",
+                        "Aion can GTFO cos target RPGs are old school skool",
+                        "I miss the good old days when hollywood actually put
+                        out a decent flick."
+                        "Now it is just BS on a stick"
+                        ]
+
+      tagged_sents = self.atagger.tag(untagged_sents)
+      for sent in tagged_sents
+         print sent
 
 if __name__ == '__main__':
    x = TestSpeechTagger()

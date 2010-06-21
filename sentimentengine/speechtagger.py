@@ -21,6 +21,7 @@ from nltk.corpus import brown, conll2000, treebank
 from nltk.classify import naivebayes
 from nltk.tag import untag
 from nltk.tag.brill import *
+from nltk.tokenize import word_tokenize
 from cPickle import dump, load
 from os.path import exists
 
@@ -101,8 +102,11 @@ class SpeechTagger:
 
    def tag(self, untagged_sentences):
       '''Tags all sentences provided in the dict untagged_sentences'''
-      for 
-      self.classifier.batch_tag()
+      #first tokenize all the words in each sentence provided
+      tokenized_sents = []
+      for sentence in untagged_sentences:
+         tokenized_sents.append(word_tokenize(sentence))
+      return self.classifier.batch_tag(tokenized_sents)
       
 
 class NaiveBayesTagger(TaggerI):
