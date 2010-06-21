@@ -25,9 +25,10 @@ from nltk.corpus import brown
 
 class TestSpeechTagger(unittest.TestCase):
 
-   def test_init(self):
+   def setUp(self):
+      '''performs initial training on taggers and classifiers'''
       self.atagger = speechtagger.SpeechTagger()
-      self.assert_(atagger != None)
+      self.assert_(self.atagger != None)
 
    def test_evaluate(self):
       '''ensures taggers pass at least 80% accuracy for the 3 corpuses'''
@@ -37,6 +38,7 @@ class TestSpeechTagger(unittest.TestCase):
       self.assert_(brown >= 80)
 
    def test_retrain(self):
+      '''retrains only tagger with specified training data'''
       train = brown.tagged_sents(categories="news")
       self.assert_(self.atagger.retrain(train) != -1)
 
