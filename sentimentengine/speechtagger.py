@@ -41,7 +41,8 @@ class SpeechTagger:
    
    def __init__(self):
       '''initialize and train brill and naive bayes classifiers'''
-      
+     
+      #TODO: Fix bug where it loads tagger from calling module dir
       if exists(file):
          input = open(file, 'rb')
          self.classifier = load(input)
@@ -50,7 +51,7 @@ class SpeechTagger:
          return
 
       self.bayes = NaiveBayesTagger()
-      boundary = int(len(brown.tagged_sents())*0.8)
+      self.boundary = int(len(brown.tagged_sents())*0.8)
       train = brown.tagged_sents()[:boundary]
 
       brill_trainer = FastBrillTaggerTrainer(initial_tagger = self.bayes,
@@ -68,10 +69,10 @@ class SpeechTagger:
    def evaluate(self):
       '''run tests on conll2000 and treebank data'''
 
-      test = treebank.tagged_sents()
+      test = treebank.tagged_sents()[:100]
       treebank_result = (100*self.classifier.evaluate(test))
 
-      test = conll2000.tagged_sents()
+      test = conll2000.tagged_sents()[:100]
       conll2000_result = (100*self.classifier.evaluate(test))
 
       test = brown.tagged_sents()[int(len(brown.tagged_sents())*0.8):]
@@ -100,15 +101,16 @@ class SpeechTagger:
 
    def tag(self, untagged_sentences):
       '''Tags all sentences provided in the dict untagged_sentences'''
-
-      pass
+      for 
+      self.classifier.batch_tag()
+      
 
 class NaiveBayesTagger(TaggerI):
 
    def __init__(self):
 
       boundary = int(len(brown.tagged_sents())*0.8)
-      train_naive = brown.tagged_sents()[:boundary]
+      train_naive = brown.tagged_sents()[:boundary] 
       temp_train_data = []
       for sentence in train_naive:
          untagged_sent = untag(sentence)
