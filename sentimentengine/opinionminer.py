@@ -58,8 +58,13 @@ class OpinionMiner:
          print category, dist.keys()
 
    @classmethod
-   def _setPositiveWords():
-      sentences = movie_reviews.sents()
+   def _setPositiveWords(self):
+      sentences = movie_reviews.sents(i)
+
+      #First get all words that exists in informative
+      #feature set and movie reviews plus associated tags
+
+
       
 
    def train(self):
