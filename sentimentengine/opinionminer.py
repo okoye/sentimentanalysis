@@ -42,13 +42,10 @@ class OpinionMiner:
       self.selective_pos = ConditionalFreqDist()
 
       for sentence in sentences:
-         for (word, tag) in enumerate(sentence):
+         for (word, tag) in sentence:
             if tag in self.selected_tags:
                self.selective_pos[tag].inc(str(word).lower())
 
-      print 'No of sample outcomes ', self.selective_pos.N()
-      print 'Conditions: ', self.selective_pos.conditions()
-      print self.selective_pos[1]
          
 
    def train(self):
