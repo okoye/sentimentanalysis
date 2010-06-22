@@ -53,7 +53,7 @@ class SpeechTagger:
 
       self.bayes = NaiveBayesTagger()
       self.boundary = int(len(brown.tagged_sents())*0.8)
-      train = brown.tagged_sents()[:boundary]
+      train = brown.tagged_sents(simplify_tags=True)[:boundary]
 
       brill_trainer = FastBrillTaggerTrainer(initial_tagger = self.bayes,
                                              templates = templates,
@@ -114,7 +114,7 @@ class NaiveBayesTagger(TaggerI):
    def __init__(self):
 
       boundary = int(len(brown.tagged_sents())*0.8)
-      train_naive = brown.tagged_sents()[:boundary] 
+      train_naive = brown.tagged_sents(simplify_tags=True)[:boundary] 
       temp_train_data = []
       for sentence in train_naive:
          untagged_sent = untag(sentence)
