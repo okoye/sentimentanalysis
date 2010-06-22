@@ -18,9 +18,11 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from nltk.corpus import movie_reviews
+from nltk.corpus import brown, conll2000, treebank
+from nltk.probability import ConditionalFreqDist
 
-adjectives = []
-adverbs = []
+selective_pos = ConditionalFreqDist()
+selected_tags = {'ADJ':True, 'ADV': True, 'CNJ':True}
 
 class OpinionMiner:
 
@@ -30,11 +32,25 @@ class OpinionMiner:
 
    @classmethod
    def _setInformativeFeatures(self):
-      _setCommonAdjectives()
-      _setCommonAdverbs()
+      _setSelectedPOSTags()
+      _setCommonWords()
 
-   def _setCommonAdjectives(self):
+   def _setSelectedPOSTags(self):
+      #first get all (word, tag) in corpuses
+      sentences = brown.tagged_sents(simplify_tags=True)
+                  + conll2000.tagged_sents(simplify_tags=True)
+                  + treebank.tagged_sents(simplify_tags=True)
+
+      for sentence in sentences:
+         condFreq = ConditionalFreqDist((tag, word)
+                     for (word, tag) in enumerate(sentence)
+                     if (selected_tags.get(tag) != None)
       
+      selective_pos = condFreq
+      print 'No of sample outcomes ', selective_pos.N()
+      print 'Conditions: ', selective_pos.conditions()
+      print selective_pos[1]
+         
 
    def train(self):
       adjectives = _computeFreqAdjectives()

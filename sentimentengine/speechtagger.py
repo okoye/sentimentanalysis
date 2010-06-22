@@ -52,7 +52,7 @@ class SpeechTagger:
          return
 
       self.bayes = NaiveBayesTagger()
-      self.boundary = int(len(brown.tagged_sents())*0.8)
+      boundary = int(len(brown.tagged_sents())*0.8)
       train = brown.tagged_sents(simplify_tags=True)[:boundary]
 
       brill_trainer = FastBrillTaggerTrainer(initial_tagger = self.bayes,
