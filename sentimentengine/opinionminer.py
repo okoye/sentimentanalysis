@@ -18,44 +18,38 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from nltk.corpus import movie_reviews
-from nltk.corpus import brown, conll2000, treebank
+from nltk.corpus import brown
 from nltk.probability import ConditionalFreqDist
-
-selective_pos = ConditionalFreqDist()
-selected_tags = {'ADJ':True, 'ADV': True, 'CNJ':True}
 
 class OpinionMiner:
 
    def __init__(self):
       self.classifier = None
+
+
       self._setInformativeFeatures()
 
    @classmethod
    def _setInformativeFeatures(self):
-      _setSelectedPOSTags()
-      _setCommonWords()
+      self._setSelectedPOSTags()
+      #_setCommonWords()
 
+   @classmethod
    def _setSelectedPOSTags(self):
       #first get all (word, tag) in corpuses
       sentences = brown.tagged_sents(simplify_tags=True)
-                  + conll2000.tagged_sents(simplify_tags=True)
-                  + treebank.tagged_sents(simplify_tags=True)
+      self.selected_tags = ["ADJ","ADV", "CNJ"]
+      self.selective_pos = ConditionalFreqDist()
 
       for sentence in sentences:
-         condFreq = ConditionalFreqDist((tag, word)
-                     for (word, tag) in enumerate(sentence)
-                     if (selected_tags.get(tag) != None)
-      
-      selective_pos = condFreq
-      print 'No of sample outcomes ', selective_pos.N()
-      print 'Conditions: ', selective_pos.conditions()
-      print selective_pos[1]
+         for (word, tag) in enumerate(sentence):
+            if tag in self.selected_tags:
+               self.selective_pos[tag].inc(str(word).lower())
+
+      print 'No of sample outcomes ', self.selective_pos.N()
+      print 'Conditions: ', self.selective_pos.conditions()
+      print self.selective_pos[1]
          
 
    def train(self):
-      adjectives = _computeFreqAdjectives()
-
-   def _computeFreqAdjectives(self):
-      '''returns the most frequent adjectives used from the corpus'''
-      for sentence in movie_reviews.sents():
-         
+         pass

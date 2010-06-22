@@ -27,7 +27,7 @@ class TestOpinionMiner():
          '''tests whether tags are generated'''
          x = opinionminer.OpinionMiner()
 
-         print 'Tags are generated: ',(len(x.selective_pos.conditions())!= 0)
+         print 'Tags are generated: ',(x.selective_pos.conditions()[0])
 
 
 if __name__ == '__main__':
