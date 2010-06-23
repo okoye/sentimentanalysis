@@ -34,6 +34,7 @@ class OpinionMiner:
    def _setDefaultInformativeFeatures(self):
       self._setSelectedPOSTags()
       self._setDefaultPositiveNegativeWords()
+      #self._computeSpecificInstanceInformativeWords()
 
    @classmethod
    def _setSelectedPOSTags(self):
@@ -55,9 +56,6 @@ class OpinionMiner:
             if fredist[key] > 10:
                self.selective_pos[category].inc(key)
 
-      for category in self.selective_pos.conditions():
-         dist = self.selective_pos[category]
-         print category, dist.keys()
 
    @classmethod
    def _setDefaultPositiveNegativeWords(self):
@@ -109,29 +107,29 @@ class OpinionMiner:
          that contribute the most significant info. That is words that
          are mostly unique to each set(positive, negative)'''
          
-         total_num_words = f_dist.N()
-         total_positive_words = cf_dist["positive"].N()
-         total_negative_words = cf_dist["negative"].N()
-         words_score = dict()
+      total_num_words = f_dist.N()
+      total_positive_words = cf_dist["positive"].N()
+      total_negative_words = cf_dist["negative"].N()
+      words_score = dict()
          
-         for word in f_dist.iteritems():
-            pos_score = BigramAssocMeasures.chi_sq(cf_dist["positive"][word],
-                                       (f_dist[word], total_positive_words),
-                                       total_num_words)
+      for word in f_dist.iteritems():
+         pos_score = BigramAssocMeasures.chi_sq(cf_dist["positive"][word],
+                                    (f_dist[word], total_positive_words),
+                                    total_num_words)
 
-            neg_score = BigramAssocMeasure.chi_sq(cf_dist["negative"][word],
-                                       (f_dist[word], total_negative_words),
-                                       total_num_words)
+         neg_score = BigramAssocMeasure.chi_sq(cf_dist["negative"][word],
+                                    (f_dist[word], total_negative_words),
+                                    total_num_words)
 
-            words_score[word] = pos_score + neg_score
+         words_score[word] = pos_score + neg_score
 
-         #Return 10% most useful words 
-         self.informative_words = sorted(words_score.iteritems(),
-                                    key=lambda (word, score): score,
-                                    reverse=True)[:0.1*int(len(words_score))]
+      #Return 10% most useful words 
+      self.informative_words = sorted(words_score.iteritems(),
+                                 key=lambda (word, score): score,
+                                 reverse=True)[:0.1*int(len(words_score))]
 
 
-
+   #################Features######################
    def getConjunctionFeats(self, sentence):
       '''computes the presence or absence of certain conjunctions
          given a sentence in string format'''
@@ -155,47 +153,47 @@ class OpinionMiner:
       '''computes normalized pos & neg scoresfor adjectives and
          adverbs and returns a tuple (pos_adj_score, pos_adv_score...)'''
 
-         #We have two options:
-         #1. Do POS Tagging then compute score on relevat pos tags or,
-         #2. Convert sentence to dict the check for presence.
+      #We have two options:
+      #1. Do POS Tagging then compute score on relevat pos tags or,
+      #2. Convert sentence to dict the check for presence.
 
-         #Currently, this module uses method 2.
-         total_adjectives_pos = len(self.positive_adjectives)
-         total_adverbs_pos = len(self.positive_adverbs)
-         total_adjectives_neg = len(self.negative_adjectives)
-         total_adverbs_neg = len(self.negative_adverbs)
-         pos_adj_score = 0
-         pos_adv_score = 0
-         neg_adj_score = 0
-         neg_adv_score = 0
+      #Currently, this module uses method 2.
+      total_adjectives_pos = len(self.positive_adjectives)
+      total_adverbs_pos = len(self.positive_adverbs)
+      total_adjectives_neg = len(self.negative_adjectives)
+      total_adverbs_neg = len(self.negative_adverbs)
+      pos_adj_score = 0
+      pos_adv_score = 0
+      neg_adj_score = 0
+      neg_adv_score = 0
 
-         word_dict = dict() #TODO Refactor this pre-processing aspect
-         tokenized_sent = word_tokenize(sentence.lower())
+      word_dict = dict() #TODO Refactor this pre-processing aspect
+      tokenized_sent = word_tokenize(sentence.lower())
 
-         for word in tokenized_sent:
-             word_dict[word] = True
+      for word in tokenized_sent:
+         word_dict[word] = True
 
-         #Now compute scores for positive values
-         for key in word_dict:
-            if key in self.positive_adjectives:
-               pos_adj_score += 1
-            elif key in self.positive_adverbs: #mutally exclusive
-               pos_adv_score += 1
+      #Now compute scores for positive values
+      for key in word_dict:
+         if key in self.positive_adjectives:
+            pos_adj_score += 1
+         elif key in self.positive_adverbs: #mutally exclusive
+            pos_adv_score += 1
 
-         pos_adj_score = pos_adj_score/total_adjectives_pos
-         pos_adv_score = pos_adv_score/total_adverbs_pos
+      pos_adj_score = pos_adj_score/total_adjectives_pos
+      pos_adv_score = pos_adv_score/total_adverbs_pos
 
-         #Compute scores for negative values
-         for key in word_dict:
-            if key in self.negative_adjectives:
-               neg_adj_score += 1
-            elif key in self.negative_adverbs:
-               neg_adv_score += 1
+      #Compute scores for negative values
+      for key in word_dict:
+         if key in self.negative_adjectives:
+            neg_adj_score += 1
+         elif key in self.negative_adverbs:
+            neg_adv_score += 1
 
-         neg_adj_score = neg_adj_score/total_adjectives_neg
-         neg_adv_score = neg_adv_score/total_adverbs_neg
+      neg_adj_score = neg_adj_score/total_adjectives_neg
+      neg_adv_score = neg_adv_score/total_adverbs_neg
 
-         return (pos_adj_score, pos_adv_score, neg_adj_score, neg_adv_score)
+      return (pos_adj_score, pos_adv_score, neg_adj_score, neg_adv_score)
       
    def train(self):
          pass
