@@ -19,8 +19,9 @@
 
 from nltk.corpus import movie_reviews
 from nltk.corpus import brown
-from nltk.probability import ConditionalFreqDist
-from nltk.probability import FreqDist
+from nltk.probability import ConditionalFreqDist, FreqDist
+from nltk.tokenize import word_tokenize
+from nltk.metrics import BigramAssocMeasures
 import speechtagger
 
 class OpinionMiner:
@@ -69,9 +70,12 @@ class OpinionMiner:
       self.positive_adverbs = set()
       self.negative_adverbs = set()
       self.negative_adjectives = set()
+
+      train_bound_pos = int(len(movie_reviews.sents(categories="pos"))*0.8)
+      train_bound_neg = int(len(movie_reviews.sents(categories="neg"))*0.8)
       
       #***************positive******************#
-      for sentence in movie_reviews.sents(categories="pos"):
+      for sentence in movie_reviews.sents(categories="pos")[:train_bound_pos]:
          concat_sent = ("".join(sentence)).lower()
          processed_sents.append(concat_sent)
 
@@ -86,7 +90,7 @@ class OpinionMiner:
          
       #**************negative*****************#
       processed_sents = []
-      for sentence in movie_reviews.sents(categories="neg"):
+      for sentence in movie_reviews.sents(categories="neg")[:train_bound_neg]:
          concat_sent = ("".join(sentence)).lower()
          processed_sents.append(concat_sent)
 
@@ -97,19 +101,101 @@ class OpinionMiner:
             if tag is 'ADJ':
                self.negative_adjectives.add(word)
             elif tag is 'ADV':
-               self.positive_adverbs.add(word)
-
-
-   def computeNormalizedConjunctionScore(self, tagged_sent):
-      pass
-
-   def computeMostInformativeWords(self, cf_distribution):
+               self.negative_adverbs.add(word)
+   
+   @classmethod
+   def _computeSpecificInstanceInformativeWords(self, cf_dist, f_dist):
       '''using chi_square distribution, computes and returns the words
          that contribute the most significant info. That is words that
          are mostly unique to each set(positive, negative)'''
-      pass
+         
+         total_num_words = f_dist.N()
+         total_positive_words = cf_dist["positive"].N()
+         total_negative_words = cf_dist["negative"].N()
+         words_score = dict()
+         
+         for word in f_dist.iteritems():
+            pos_score = BigramAssocMeasures.chi_sq(cf_dist["positive"][word],
+                                       (f_dist[word], total_positive_words),
+                                       total_num_words)
 
+            neg_score = BigramAssocMeasure.chi_sq(cf_dist["negative"][word],
+                                       (f_dist[word], total_negative_words),
+                                       total_num_words)
+
+            words_score[word] = pos_score + neg_score
+
+         #Return 10% most useful words 
+         self.informative_words = sorted(words_score.iteritems(),
+                                    key=lambda (word, score): score,
+                                    reverse=True)[:0.1*int(len(words_score))]
+
+
+
+   def getConjunctionFeats(self, sentence):
+      '''computes the presence or absence of certain conjunctions
+         given a sentence in string format'''
+
+      tokenized_sent = word_tokenize(sentence.lower())
+      word_dict = dict()
+      sentence_features = dict()
+
+      for word in tokenized_sent: #speeds up search
+         word_dict[word] = True
+
+      for conjunction in self.selective_pos['CNJ'].keys():
+         if conjunction in word_dict:
+            sentence_features[conjunction] = True
+         else:
+            sentence_features[conjunction] = False
+
+      return sentence_features
+
+   def computeNormalizedScores(self, sentence):
+      '''computes normalized pos & neg scoresfor adjectives and
+         adverbs and returns a tuple (pos_adj_score, pos_adv_score...)'''
+
+         #We have two options:
+         #1. Do POS Tagging then compute score on relevat pos tags or,
+         #2. Convert sentence to dict the check for presence.
+
+         #Currently, this module uses method 2.
+         total_adjectives_pos = len(self.positive_adjectives)
+         total_adverbs_pos = len(self.positive_adverbs)
+         total_adjectives_neg = len(self.negative_adjectives)
+         total_adverbs_neg = len(self.negative_adverbs)
+         pos_adj_score = 0
+         pos_adv_score = 0
+         neg_adj_score = 0
+         neg_adv_score = 0
+
+         word_dict = dict() #TODO Refactor this pre-processing aspect
+         tokenized_sent = word_tokenize(sentence.lower())
+
+         for word in tokenized_sent:
+             word_dict[word] = True
+
+         #Now compute scores for positive values
+         for key in word_dict:
+            if key in self.positive_adjectives:
+               pos_adj_score += 1
+            elif key in self.positive_adverbs: #mutally exclusive
+               pos_adv_score += 1
+
+         pos_adj_score = pos_adj_score/total_adjectives_pos
+         pos_adv_score = pos_adv_score/total_adverbs_pos
+
+         #Compute scores for negative values
+         for key in word_dict:
+            if key in self.negative_adjectives:
+               neg_adj_score += 1
+            elif key in self.negative_adverbs:
+               neg_adv_score += 1
+
+         neg_adj_score = neg_adj_score/total_adjectives_neg
+         neg_adv_score = neg_adv_score/total_adverbs_neg
+
+         return (pos_adj_score, pos_adv_score, neg_adj_score, neg_adv_score)
       
-
    def train(self):
          pass
