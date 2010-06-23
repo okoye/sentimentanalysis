@@ -21,17 +21,18 @@ from nltk.corpus import movie_reviews
 from nltk.corpus import brown
 from nltk.probability import ConditionalFreqDist
 from nltk.probability import FreqDist
+import speechtagger
 
 class OpinionMiner:
 
    def __init__(self):
       self.classifier = None
-      self._setInformativeFeatures()
+      self._setDefaultInformativeFeatures()
 
    @classmethod
-   def _setInformativeFeatures(self):
+   def _setDefaultInformativeFeatures(self):
       self._setSelectedPOSTags()
-      self._setPositiveWords()
+      self._setDefaultPositiveNegativeWords()
 
    @classmethod
    def _setSelectedPOSTags(self):
@@ -58,12 +59,55 @@ class OpinionMiner:
          print category, dist.keys()
 
    @classmethod
-   def _setPositiveWords(self):
-      sentences = movie_reviews.sents(i)
+   def _setDefaultPositiveNegativeWords(self):
 
-      #First get all words that exists in informative
-      #feature set and movie reviews plus associated tags
+      #First compile list of positive adjectives & adverbs
+      #by initially tagging all positive sentences with POS tagger
+      tagger = speechtagger.SpeechTagger()
+      processed_sents = []
+      self.positive_adjectives = set()
+      self.positive_adverbs = set()
+      self.negative_adverbs = set()
+      self.negative_adjectives = set()
+      
+      #***************positive******************#
+      for sentence in movie_reviews.sents(categories="pos"):
+         concat_sent = ("".join(sentence)).lower()
+         processed_sents.append(concat_sent)
 
+      tagged_sents = tagger.tag(processed_sents)
+
+      for sentence in tagged_sents:
+         for (word, tag) in sentence:
+            if tag is 'ADJ':
+               self.positive_adjectives.add(word)
+            elif tag is 'ADV':
+               self.positive_adverbs.add(word)
+         
+      #**************negative*****************#
+      processed_sents = []
+      for sentence in movie_reviews.sents(categories="neg"):
+         concat_sent = ("".join(sentence)).lower()
+         processed_sents.append(concat_sent)
+
+      tagged_sents = tagger.tag(processed_sents)
+
+      for sentence in tagged_sents:
+         for (word, tag) in sentence:
+            if tag is 'ADJ':
+               self.negative_adjectives.add(word)
+            elif tag is 'ADV':
+               self.positive_adverbs.add(word)
+
+
+   def computeNormalizedConjunctionScore(self, tagged_sent):
+      pass
+
+   def computeMostInformativeWords(self, cf_distribution):
+      '''using chi_square distribution, computes and returns the words
+         that contribute the most significant info. That is words that
+         are mostly unique to each set(positive, negative)'''
+      pass
 
       
 
