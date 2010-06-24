@@ -44,15 +44,14 @@ class OpinionMiner:
       if train_data:
          c_dist = ConditionalFreqDist()
          f_dist = FreqDist()
-         try:
+         if 1:#try:
             for (tag, sentence) in train_data:
                for word in word_tokenize(sentence.lower()):
                   c_dist[tag].inc(word)
                   f_dist.inc(word)
-            print c_dist.N(), f_dist.N()
             self._computeInstanceInformativeWords(c_dist, f_dist)
             print 'INS Words', self.inswords
-         except:
+         #except:
             logger.crawl_logs(["ERROR: ",str(exc_info()[0])])
 
 
@@ -169,14 +168,13 @@ class OpinionMiner:
       words_score = dict()
         
       for word in f_dist.keys():
-         print "debug", f_dist.N()
          pos_score = BigramAssocMeasures.chi_sq(cf_dist["positive"][word],
                                     (f_dist[word], total_positive_words),
                                     total_num_words)
-
-         neg_score = BigramAssocMeasure.chi_sq(cf_dist["negative"][word],
+         neg_score = BigramAssocMeasures.chi_sq(cf_dist["negative"][word],
                                     (f_dist[word], total_negative_words),
                                     total_num_words)
+
 
          words_score[word] = pos_score + neg_score
 
