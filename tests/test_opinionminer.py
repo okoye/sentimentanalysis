@@ -29,17 +29,21 @@ class TestOpinionMiner():
          '''tests whether all features like default adjectives 
             are generated when class is instantiated'''
 
-         train_data = []
-
+         train = []
+ 
          bound = int(len(movie_reviews.sents(categories="pos"))*0.8)
-         train_data.append(movie_reviews.sents(categories="pos")[:bound])
+         for i,sent in enumerate(movie_reviews.sents(categories="pos")[:bound]):
+            train.append(("positive"," ".join(sent)))
+
 
          bound = int(len(movie_reviews.sents(categories="neg"))*0.8)
-         train_data.append(movie_reviews.sents(categories="neg")[:bound])
+         for sent in movie_reviews.sents(categories="neg")[:bound]:
+            train.append(("negative", " ".join(sent)))
+            
 
-         random.shuffle(train_data)
+         random.shuffle(train)
 
-         x = opinionminer.OpinionMiner(train_data)
+         x = opinionminer.OpinionMiner(train)
 
          print 'Tags are generated: ',len(x.selective_pos.conditions())>0
          print 'Positive Adverbs exist:', (len(x.positive_adverbs) > 2)

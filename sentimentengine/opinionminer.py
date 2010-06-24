@@ -25,6 +25,7 @@ from nltk.metrics import BigramAssocMeasures
 from cPickle import dump, load
 from PyML import VectorDataSet, SparseDataSet
 from PyML import SVM
+from sys import exc_info
 import speechtagger
 import logger
 import os
@@ -48,10 +49,11 @@ class OpinionMiner:
                for word in word_tokenize(sentence.lower()):
                   c_dist[tag].inc(word)
                   f_dist.inc(word)
+            print c_dist.N(), f_dist.N()
             self._computeInstanceInformativeWords(c_dist, f_dist)
             print 'INS Words', self.inswords
          except:
-            logger.crawl_logs('ERROR: incorrect format for training data')
+            logger.crawl_logs(["ERROR: ",str(exc_info()[0])])
 
 
    @classmethod
@@ -151,7 +153,7 @@ class OpinionMiner:
 
 
    @classmethod
-   def _computeSpecificInstanceInformativeWords(self, cf_dist, f_dist):
+   def _computeInstanceInformativeWords(self, cf_dist, f_dist):
       '''using chi_square distribution, computes and returns the words
          that contribute the most significant info. That is words that
          are mostly unique to each set(positive, negative)'''
@@ -160,13 +162,14 @@ class OpinionMiner:
       if buff:
          self.informative_words = buff
          return
-         
+
       total_num_words = f_dist.N()
       total_positive_words = cf_dist["positive"].N()
       total_negative_words = cf_dist["negative"].N()
       words_score = dict()
-         
-      for word in f_dist.iteritems():
+        
+      for word in f_dist.keys():
+         print "debug", f_dist.N()
          pos_score = BigramAssocMeasures.chi_sq(cf_dist["positive"][word],
                                     (f_dist[word], total_positive_words),
                                     total_num_words)
@@ -177,10 +180,12 @@ class OpinionMiner:
 
          words_score[word] = pos_score + neg_score
 
+         print "score ", word, words_score[word]
+
       #Return 10% most useful words 
       self.informative_words = sorted(words_score.iteritems(),
                                  key=lambda (word, score): score,
-                                 reverse=True)[:0.1*int(len(words_score))]
+                                 reverse=True)[:int(0.1*len(words_score))]
 
       self._saveData('informative_words.bin',self.informative_words)
 
