@@ -22,7 +22,9 @@ from nltk.corpus import brown
 from nltk.probability import ConditionalFreqDist, FreqDist
 from nltk.tokenize import word_tokenize
 from nltk.metrics import BigramAssocMeasures
+from cPickle import dump, load
 import speechtagger
+import logger
 
 class OpinionMiner:
 
@@ -34,27 +36,35 @@ class OpinionMiner:
       self.classifier = None
       self._setDefaultInformativeFeatures()
       
-      #Generate conditional frequency data for each word
+      #Generate conditional freq and freq dist for each word
       if train_data:
-         cond_dist = ConditionalFreqDist()
-         freq_dist = FreqDist()
+         c_dist = ConditionalFreqDist()
+         f_dist = FreqDist()
          try:
             for (tag, sentence) in train_data:
                for word in word_tokenize(sentence.lower()):
-                  cond_dist[tag].inc(word)
-
-
-
-
+                  c_dist[tag].inc(word)
+                  f_dist.inc(word)
+            self._computeInstanceInformativeWords(c_dist, f_dist)
+            print 'INS Words', self.inswords
+         except:
+            logger.crawl_logs('ERROR: incorrect format for training data')
+         
+      
 
    @classmethod
    def _setDefaultInformativeFeatures(self):
       self._setSelectedPOSTags()
       self._setDefaultPositiveNegativeWords()
-      #self._computeSpecificInstanceInformativeWords()
 
    @classmethod
    def _setSelectedPOSTags(self):
+
+      buff = self._loadData('selective_pos.bin')
+
+      if buff:
+         self.selective_pos = buff
+         return
 
       #First get all (word, tag) in corpuses
       sentences = brown.tagged_sents(simplify_tags=True)
@@ -72,6 +82,8 @@ class OpinionMiner:
          for key in fredist.keys():
             if fredist[key] > 4:
                self.selective_pos[category].inc(key)
+
+      self._saveData('selective_pos.bin',self.selective_pos)
 
 
    @classmethod
@@ -94,8 +106,7 @@ class OpinionMiner:
          concat_sent = (" ".join(sentence)).lower()
          processed_sents.append(concat_sent)
 
-      tagged_sents = tagger.tag(processed_sents)
-      print tagged_sents
+      tagged_sents = tagger.tag(processed_sents) #TODO: Save to file
 
       for sentence in tagged_sents:
          for (word, tag) in sentence:
@@ -110,7 +121,7 @@ class OpinionMiner:
          concat_sent = (" ".join(sentence)).lower()
          processed_sents.append(concat_sent)
 
-      tagged_sents = tagger.tag(processed_sents)
+      tagged_sents = tagger.tag(processed_sents) #TODO: Save to file
 
       for sentence in tagged_sents:
          for (word, tag) in sentence:
@@ -118,8 +129,19 @@ class OpinionMiner:
                self.negative_adjectives.add(word)
             elif tag is 'ADV' or word in self.selective_pos['ADV']:
                self.negative_adverbs.add(word)
-      print 'Some positive adjectives:',self.positive_adjectives[:100]
+      print 'Some positive adjectives:',self.positive_adjectives
       print 'Some negative adverbs:',self.negative_adverbs
+
+   @classmethod
+   def _setTrasitiveAdverbs(self):
+      '''compile the list of transitive adverbs using wordnet. 
+         includes words like but, nevertheless, however...'''
+      wordlist = set('however','but','nevertheless','still',
+                     'withal','yet','all the same', 'even so',
+                     'nonetheless', 'not with standing', 'notwithstanding'
+                     'evenso', 'none the less')
+
+
    
    @classmethod
    def _computeSpecificInstanceInformativeWords(self, cf_dist, f_dist):
@@ -148,6 +170,25 @@ class OpinionMiner:
                                  key=lambda (word, score): score,
                                  reverse=True)[:0.1*int(len(words_score))]
 
+
+   @classmethod
+   def _saveData(self, filename, data):
+      absolute_path = os.path.join(os.path.dirname(__file__),filename)
+      FILE = open(absolute_path, "wb")
+      dump(data, FILE, 1)
+      FILE.close()
+
+   @classmethod
+   def _loadData(self, filename):
+      absolute_path = os.path.join(os.path.dirname(__file__),filename)
+      try:
+         FILE = open(absolute_path, "rb")
+         buff = load(FILE)
+         FILE.close()
+         return buff
+      except:
+         logger.crawl_logs("A problem occured when reading  "+filename)
+         return None
 
    #################Features######################
    def getConjunctionFeats(self, sentence):
@@ -217,3 +258,26 @@ class OpinionMiner:
       
    def train(self):
          pass
+
+   def getTrasitiveFeatures(self, sentence):
+      wordlist = set('however','but','nevertheless','still',
+                     'withal','yet','all','same', 'even' 'so',
+                     'nonetheless', 'not','standing', 'notwithstanding'
+                     'evenso', 'none','less')
+
+      tokenized_sent = word_tokenize(sentence.lower())
+      features = dict()
+      word_dict = dict()
+
+      for word in tokenized_sent:
+         word_dict[word] = True
+
+      for word in wordlist:
+         if word in word_dict:
+            features[word] = True
+         else:
+            features[word] = False
+
+      return features
+
+
