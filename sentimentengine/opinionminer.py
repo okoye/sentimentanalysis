@@ -178,12 +178,10 @@ class OpinionMiner:
 
          words_score[word] = pos_score + neg_score
 
-         print "score ", word, words_score[word]
-
       #Return 10% most useful words 
-      self.informative_words = sorted(words_score.iteritems(),
+      self.informative_words = dict(sorted(words_score.iteritems(),
                                  key=lambda (word, score): score,
-                                 reverse=True)[:int(0.1*len(words_score))]
+                                 reverse=True)[:int(0.1*len(words_score))])
 
       self._saveData('informative_words.bin',self.informative_words)
 
@@ -215,6 +213,7 @@ class OpinionMiner:
             conjunc = getConjunctionFeats(sentence)
             norm_score = computeNormalizedScores(sentence)
             trans_feat = getTransitiveFeatures(sentence)
+            inst_feat = getSpecificInstanceFeatures(sentence)
             
             '''combine all the results into a feature
                vector of the form:
@@ -236,6 +235,10 @@ class OpinionMiner:
             for value in trans_feat.values():
                temp.append(value)
 
+            #getSpecificInstanceFeat Result
+            for value in inst_feat.values():
+               temp.append(value)
+
             #Combine all features together
             features.append(temp)
 
@@ -244,6 +247,7 @@ class OpinionMiner:
             conjunc = getConjunctionFeats(sentence)
             norm_score = computeNormalizedScores(sentence)
             trans_feat = getTransitiveFeatures(sentence)
+            inst_feat = getSpecificInstanceFeatures(sentence)
 
             '''combine all the results into a feature
                vector of the form:
@@ -261,6 +265,10 @@ class OpinionMiner:
 
             #getTransitiveFeatures Result
             for value in trans_feat.values():
+               temp.append(value)
+
+            #getSpecificInstanceFeat Result
+            for value in inst_feat.values():
                temp.append(value)
 
             #Combine all features together
@@ -370,6 +378,22 @@ class OpinionMiner:
          word_dict[word] = True
 
       for word in wordlist:
+         if word in word_dict:
+            features[word] = 1
+         else:
+            features[word] = 0
+
+      return features
+
+   def getSpecificInstanceFeatures(self, sentence):
+      word_dict = dict()
+      tokenized_sent = word_tokenize(sentence.lower())
+      features = dict()
+
+      for word in tokenized_sent:
+         word_dict[word] = True
+
+      for word in self.informative_words:
          if word in word_dict:
             features[word] = 1
          else:
