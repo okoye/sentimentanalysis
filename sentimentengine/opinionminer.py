@@ -25,6 +25,7 @@ from nltk.metrics import BigramAssocMeasures
 from cPickle import dump, load
 import speechtagger
 import logger
+import os
 
 class OpinionMiner:
 
@@ -89,6 +90,18 @@ class OpinionMiner:
    @classmethod
    def _setDefaultPositiveNegativeWords(self):
 
+      buff1 = self._loadData('positive_adjectives.bin')
+      buff2 = self._loadData('positive_adverbs.bin')
+      buff3 = self._loadData('negative_adverbs.bin')
+      buff4 = self._loadData('negative_adjectives.bin')
+
+      if buff1 and buff2 and buff3 and buff4:
+         self.positive_adjectives = buff1
+         self.positive_adverbs = buff2
+         self.negative_adverbs = buff3
+         self.negative_adjectives = buff4
+         return
+
       #First compile list of positive adjectives & adverbs
       #by initially tagging all positive sentences with POS tagger
       tagger = speechtagger.SpeechTagger()
@@ -129,25 +142,23 @@ class OpinionMiner:
                self.negative_adjectives.add(word)
             elif tag is 'ADV' or word in self.selective_pos['ADV']:
                self.negative_adverbs.add(word)
-      print 'Some positive adjectives:',self.positive_adjectives
-      print 'Some negative adverbs:',self.negative_adverbs
 
-   @classmethod
-   def _setTrasitiveAdverbs(self):
-      '''compile the list of transitive adverbs using wordnet. 
-         includes words like but, nevertheless, however...'''
-      wordlist = set('however','but','nevertheless','still',
-                     'withal','yet','all the same', 'even so',
-                     'nonetheless', 'not with standing', 'notwithstanding'
-                     'evenso', 'none the less')
+      self._saveData('positive_adjectives.bin',self.positive_adjectives)
+      self._saveData('positive_adverbs.bin', self.positive_adverbs)
+      self._saveData('negative_adjectives.bin', self.negative_adjectives)
+      self._saveData('negative_adverbs.bin', self.negative_adverbs)
 
 
-   
    @classmethod
    def _computeSpecificInstanceInformativeWords(self, cf_dist, f_dist):
       '''using chi_square distribution, computes and returns the words
          that contribute the most significant info. That is words that
          are mostly unique to each set(positive, negative)'''
+
+      buff = self._loadData('informative_words.bin')
+      if buff:
+         self.informative_words = buff
+         return
          
       total_num_words = f_dist.N()
       total_positive_words = cf_dist["positive"].N()
@@ -169,6 +180,8 @@ class OpinionMiner:
       self.informative_words = sorted(words_score.iteritems(),
                                  key=lambda (word, score): score,
                                  reverse=True)[:0.1*int(len(words_score))]
+
+      self._saveData('informative_words.bin',self.informative_words)
 
 
    @classmethod

@@ -19,11 +19,11 @@
 
 def crawl_logs(messages):
    file = open('crawl_logs.log','a')
-   if type(message).__name__ == 'list':
+   if type(messages).__name__ == 'list':
       for m in messages:
          print m
          file.write(m+'\n')
    else:
-      print message
-      file.write(message+'\n')
+      print messages
+      file.write(messages+'\n')
    file.close()
