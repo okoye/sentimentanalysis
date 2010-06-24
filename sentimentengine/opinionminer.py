@@ -44,14 +44,14 @@ class OpinionMiner:
       if train_data:
          c_dist = ConditionalFreqDist()
          f_dist = FreqDist()
-         if 1:#try:
+         try:
             for (tag, sentence) in train_data:
                for word in word_tokenize(sentence.lower()):
                   c_dist[tag].inc(word)
                   f_dist.inc(word)
             self._computeInstanceInformativeWords(c_dist, f_dist)
-            print 'INS Words', self.inswords
-         #except:
+            print 'INS Words', self.informative_words
+         except:
             logger.crawl_logs(["ERROR: ",str(exc_info()[0])])
 
 
