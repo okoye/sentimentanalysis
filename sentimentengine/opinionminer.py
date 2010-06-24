@@ -24,6 +24,7 @@ from nltk.tokenize import word_tokenize
 from nltk.metrics import BigramAssocMeasures
 from cPickle import dump, load
 from PyML import VectorDataSet, SparseDataSet
+from PyML import SVM
 import speechtagger
 import logger
 import os
@@ -183,17 +184,89 @@ class OpinionMiner:
 
       self._saveData('informative_words.bin',self.informative_words)
 
-   @classmethod
-   def _trainClassifier(self):
-      '''trains a decision tree, svm and naive bayes classifier
-         and prints their performance'''
+   def trainClassifier(self, train_data):
+      '''trains a decision tree, svm and naive bayes classifier'''
 
       #NaiveBayes Classifier
 
 
       #Support Vector Machine
-      
+      feature_set = []
+      labels = []
+      for instance in train_data:
+         feat = self._getFeatures(instance, train=True)
+         labels.append(feat[0])
+         feature_set.append(feat[1:])
+         
+         '''a feature_set is a list consisting of:
+            [label, f1, f2, f3...], [label, f1, f2, f3...]'''
 
+      vector_data = VectorDataSet(feature_set,L=labels) #Linear Discriminant
+      svm = SVM() 
+      svm.train(vector_data)
+
+   def getFeatures(self, data, train):
+      features = []
+      if train is True:
+         for (tag, sentence) in data:
+            conjunc = getConjunctionFeats(sentence)
+            norm_score = computeNormalizedScores(sentence)
+            trans_feat = getTransitiveFeatures(sentence)
+            
+            '''combine all the results into a feature
+               vector of the form:
+               [[label, f1, f2, f3...], [label...]]'''
+            temp = []
+
+            #Class label
+            temp.append(tag)
+
+            #getConjunctionFeats Result
+            for value in conjunc.values():
+               temp.append(value)
+
+            #computeNormalizedScores Result
+            for value in norm_score:
+               temp.append(value)
+
+            #getTransitiveFeatures Result
+            for value in trans_feat.values():
+               temp.append(value)
+
+            #Combine all features together
+            features.append(temp)
+
+      elif train is False:
+         for sentence in data:
+            conjunc = getConjunctionFeats(sentence)
+            norm_score = computeNormalizedScores(sentence)
+            trans_feat = getTransitiveFeatures(sentence)
+
+            '''combine all the results into a feature
+               vector of the form:
+               [[f1, f2, f3,...],[f1, f2, f3,...]]'''
+
+            temp = []
+
+            #getConjunctionFeats Result
+            for  value in conjunc.values():
+               temp.append(value)
+
+            #computeNormalizedScores Result
+            for value in norm_score:
+               temp.append(value)
+
+            #getTransitiveFeatures Result
+            for value in trans_feat.values():
+               temp.append(value)
+
+            #Combine all features together
+            features.append(temp)
+
+      return features
+
+
+      
 
    @classmethod
    def _saveData(self, filename, data):

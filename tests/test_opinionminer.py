@@ -20,20 +20,35 @@
 import sys
 sys.path.append("../sentimentengine")
 import opinionminer
+import random
+from nltk.corpus import movie_reviews
 
 class TestOpinionMiner():
    
-      def test_tag_generation(self):
-         '''tests whether tags are generated'''
-         x = opinionminer.OpinionMiner()
+      def test_calibration(self):
+         '''tests whether all features like default adjectives 
+            are generated when class is instantiated'''
+
+         train_data = []
+
+         bound = int(len(movie_reviews.sents(categories="pos"))*0.8)
+         train_data.append(movie_reviews.sents(categories="pos")[:bound])
+
+         bound = int(len(movie_reviews.sents(categories="neg"))*0.8)
+         train_data.append(movie_reviews.sents(categories="neg")[:bound])
+
+         random.shuffle(train_data)
+
+         x = opinionminer.OpinionMiner(train_data)
 
          print 'Tags are generated: ',len(x.selective_pos.conditions())>0
          print 'Positive Adverbs exist:', (len(x.positive_adverbs) > 2)
          print 'Positive Adjectives exist:', (len(x.positive_adjectives)>2)
 
 
+
 if __name__ == '__main__':
    tester = TestOpinionMiner()
-   tester.test_tag_generation()
+   tester.test_calibration()
 
 
