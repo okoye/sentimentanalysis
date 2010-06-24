@@ -23,6 +23,7 @@ from nltk.probability import ConditionalFreqDist, FreqDist
 from nltk.tokenize import word_tokenize
 from nltk.metrics import BigramAssocMeasures
 from cPickle import dump, load
+from PyML import VectorDataSet, SparseDataSet
 import speechtagger
 import logger
 import os
@@ -50,8 +51,7 @@ class OpinionMiner:
             print 'INS Words', self.inswords
          except:
             logger.crawl_logs('ERROR: incorrect format for training data')
-         
-      
+
 
    @classmethod
    def _setDefaultInformativeFeatures(self):
@@ -113,7 +113,7 @@ class OpinionMiner:
 
       train_bound_pos = int(len(movie_reviews.sents(categories="pos"))*0.8)
       train_bound_neg = int(len(movie_reviews.sents(categories="neg"))*0.8)
-      
+
       #***************positive******************#
       for sentence in movie_reviews.sents(categories="pos")[:train_bound_pos]:
          concat_sent = (" ".join(sentence)).lower()
@@ -183,6 +183,17 @@ class OpinionMiner:
 
       self._saveData('informative_words.bin',self.informative_words)
 
+   @classmethod
+   def _trainClassifier(self):
+      '''trains a decision tree, svm and naive bayes classifier
+         and prints their performance'''
+
+      #NaiveBayes Classifier
+
+
+      #Support Vector Machine
+      
+
 
    @classmethod
    def _saveData(self, filename, data):
@@ -217,9 +228,9 @@ class OpinionMiner:
 
       for conjunction in self.selective_pos['CNJ'].keys():
          if conjunction in word_dict:
-            sentence_features[conjunction] = True
+            sentence_features[conjunction] = 1
          else:
-            sentence_features[conjunction] = False
+            sentence_features[conjunction] = 0
 
       return sentence_features
 
@@ -269,9 +280,6 @@ class OpinionMiner:
 
       return (pos_adj_score, pos_adv_score, neg_adj_score, neg_adv_score)
       
-   def train(self):
-         pass
-
    def getTrasitiveFeatures(self, sentence):
       wordlist = set('however','but','nevertheless','still',
                      'withal','yet','all','same', 'even' 'so',
@@ -287,10 +295,11 @@ class OpinionMiner:
 
       for word in wordlist:
          if word in word_dict:
-            features[word] = True
+            features[word] = 1
          else:
-            features[word] = False
+            features[word] = 0
 
       return features
 
 
+   ##############End Features#################
