@@ -43,7 +43,10 @@ class TestOpinionMiner():
 
          random.shuffle(train)
 
-         x = opinionminer.OpinionMiner(train)
+         x = opinionminer.OpinionMiner()
+
+         x.trainClassifier(train)
+
 
          print 'Tags are generated: ',len(x.selective_pos.conditions())>0
          print 'Positive Adverbs exist:', (len(x.positive_adverbs) > 2)

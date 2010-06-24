@@ -38,21 +38,21 @@ class OpinionMiner:
          ('label',  'sentence belonging to this class')'''
 
       self.classifier = None
+      c_dist = ConditionalFreqDist()
+      f_dist = FreqDist()
       self._setDefaultInformativeFeatures()
       
       #Generate conditional freq and freq dist for each word
       if train_data:
-         c_dist = ConditionalFreqDist()
-         f_dist = FreqDist()
          try:
             for (tag, sentence) in train_data:
                for word in word_tokenize(sentence.lower()):
                   c_dist[tag].inc(word)
                   f_dist.inc(word)
-            self._computeInstanceInformativeWords(c_dist, f_dist)
-            print 'INS Words', self.informative_words
          except:
             logger.crawl_logs(["ERROR: ",str(exc_info()[0])])
+
+      self._computeInstanceInformativeWords(c_dist, f_dist)
 
 
    @classmethod
@@ -152,7 +152,7 @@ class OpinionMiner:
 
 
    @classmethod
-   def _computeInstanceInformativeWords(self, cf_dist, f_dist):
+   def _computeInstanceInformativeWords(self, cf_dist=None, f_dist=None):
       '''using chi_square distribution, computes and returns the words
          that contribute the most significant info. That is words that
          are mostly unique to each set(positive, negative)'''
@@ -160,6 +160,9 @@ class OpinionMiner:
       buff = self._loadData('informative_words.bin')
       if buff:
          self.informative_words = buff
+         return
+      elif cf_dist == None or f_dist == None:
+         self.informative_words = dict()
          return
 
       total_num_words = f_dist.N()
@@ -195,25 +198,25 @@ class OpinionMiner:
       feature_set = []
       labels = []
       for instance in train_data:
-         feat = self._getFeatures(instance, train=True)
+         feat = self.getFeatures(instance, train=True)
          labels.append(feat[0])
-         feature_set.append(feat[1:])
+         feature_set.append(feat[1:len(feat)])
          
          '''a feature_set is a list consisting of:
             [label, f1, f2, f3...], [label, f1, f2, f3...]'''
 
-      vector_data = VectorDataSet(feature_set,L=labels) #Linear Discriminant
+      vector_data = VectorDataSet(feature_set, L=labels) #Linear Discriminant
       svm = SVM() 
       svm.train(vector_data)
 
-   def getFeatures(self, data, train):
-      features = []
+   def getFeatures(self, data, train=False):
       if train is True:
-         for (tag, sentence) in data:
-            conjunc = getConjunctionFeats(sentence)
-            norm_score = computeNormalizedScores(sentence)
-            trans_feat = getTransitiveFeatures(sentence)
-            inst_feat = getSpecificInstanceFeatures(sentence)
+         if 1: #Un-necessary!
+            (tag, sentence) = data
+            conjunc = self.getConjunctionFeats(sentence)
+            norm_score = self.computeNormalizedScores(sentence)
+            trans_feat = self.getTransitiveFeatures(sentence)
+            inst_feat = self.getSpecificInstanceFeatures(sentence)
             
             '''combine all the results into a feature
                vector of the form:
@@ -239,8 +242,7 @@ class OpinionMiner:
             for value in inst_feat.values():
                temp.append(value)
 
-            #Combine all features together
-            features.append(temp)
+            return temp
 
       elif train is False:
          for sentence in data:
@@ -271,10 +273,8 @@ class OpinionMiner:
             for value in inst_feat.values():
                temp.append(value)
 
-            #Combine all features together
-            features.append(temp)
 
-      return features
+      return temp
 
 
       
@@ -364,11 +364,11 @@ class OpinionMiner:
 
       return (pos_adj_score, pos_adv_score, neg_adj_score, neg_adv_score)
       
-   def getTrasitiveFeatures(self, sentence):
-      wordlist = set('however','but','nevertheless','still',
+   def getTransitiveFeatures(self, sentence):
+      wordlist = set(['however','but','nevertheless','still',
                      'withal','yet','all','same', 'even' 'so',
                      'nonetheless', 'not','standing', 'notwithstanding'
-                     'evenso', 'none','less')
+                     'evenso', 'none','less'])
 
       tokenized_sent = word_tokenize(sentence.lower())
       features = dict()
