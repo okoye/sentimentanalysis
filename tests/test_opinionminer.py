@@ -28,7 +28,8 @@ class TestOpinionMiner():
          x = opinionminer.OpinionMiner()
 
          print 'Tags are generated: ',len(x.selective_pos.conditions())>0
-         print 'Tags length: ', x.selective_pos.N
+         print 'Positive Adverbs exist:', (len(x.positive_adverbs) > 2)
+         print 'Positive Adjectives exist:', (len(x.positive_adjectives)>2)
 
 
 if __name__ == '__main__':

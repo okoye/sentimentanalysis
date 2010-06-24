@@ -26,9 +26,26 @@ import speechtagger
 
 class OpinionMiner:
 
-   def __init__(self):
+   def __init__(self, train_data=None):
+      '''initializes classifier with important features required for
+         classification. Accepts a list of tuples each of the form
+         ('label',  'sentence belonging to this class')'''
+
       self.classifier = None
       self._setDefaultInformativeFeatures()
+      
+      #Generate conditional frequency data for each word
+      if train_data:
+         cond_dist = ConditionalFreqDist()
+         freq_dist = FreqDist()
+         try:
+            for (tag, sentence) in train_data:
+               for word in word_tokenize(sentence.lower()):
+                  cond_dist[tag].inc(word)
+
+
+
+
 
    @classmethod
    def _setDefaultInformativeFeatures(self):
@@ -53,7 +70,7 @@ class OpinionMiner:
       for category in temp_dist.conditions():
          fredist = temp_dist[category]
          for key in fredist.keys():
-            if fredist[key] > 10:
+            if fredist[key] > 4:
                self.selective_pos[category].inc(key)
 
 
@@ -74,32 +91,35 @@ class OpinionMiner:
       
       #***************positive******************#
       for sentence in movie_reviews.sents(categories="pos")[:train_bound_pos]:
-         concat_sent = ("".join(sentence)).lower()
+         concat_sent = (" ".join(sentence)).lower()
          processed_sents.append(concat_sent)
 
       tagged_sents = tagger.tag(processed_sents)
+      print tagged_sents
 
       for sentence in tagged_sents:
          for (word, tag) in sentence:
-            if tag is 'ADJ':
+            if tag is 'ADJ' or word in self.selective_pos['ADJ']:
                self.positive_adjectives.add(word)
-            elif tag is 'ADV':
+            elif tag is 'ADV' or word in self.selective_pos['ADV']:
                self.positive_adverbs.add(word)
          
       #**************negative*****************#
       processed_sents = []
       for sentence in movie_reviews.sents(categories="neg")[:train_bound_neg]:
-         concat_sent = ("".join(sentence)).lower()
+         concat_sent = (" ".join(sentence)).lower()
          processed_sents.append(concat_sent)
 
       tagged_sents = tagger.tag(processed_sents)
 
       for sentence in tagged_sents:
          for (word, tag) in sentence:
-            if tag is 'ADJ':
+            if tag is 'ADJ' or word in self.selective_pos['ADJ']:
                self.negative_adjectives.add(word)
-            elif tag is 'ADV':
+            elif tag is 'ADV' or word in self.selective_pos['ADV']:
                self.negative_adverbs.add(word)
+      print 'Some positive adjectives:',self.positive_adjectives[:100]
+      print 'Some negative adverbs:',self.negative_adverbs
    
    @classmethod
    def _computeSpecificInstanceInformativeWords(self, cf_dist, f_dist):

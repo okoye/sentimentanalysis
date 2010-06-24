@@ -15,8 +15,7 @@ Implement views for all objects whose sentiments have not been extracted.
 Design analytical engine.
 Gather list of modern words like 'WTF'.
 Use support vector machine to predict sentiment.
-Allow discovery of new positive, negative adjective and adverbs or descriptors
-using approaches in technical paper or by incorporating BigramAssocMeasures.
 Test hypothesis of using bounds like 'worst' and 'best' to create segmenting
 attributes based on distance in wordnet and a trained classifier.
 Generate actual product features by clustering.
+Speedup NLTK POS Tagging
