@@ -25,6 +25,7 @@ from nltk.metrics import BigramAssocMeasures
 from cPickle import dump, load
 from PyML import VectorDataSet, SparseDataSet
 from PyML import SVM
+from PyML.classifiers import loadSVM
 from sys import exc_info
 import speechtagger
 import logger
@@ -207,7 +208,8 @@ class OpinionMiner:
 
       vector_data = VectorDataSet(feature_set, L=labels) #Linear Discriminant
       svm = SVM() 
-      svm.train(vector_data)
+      svm.train(vector_data, saveSpace=False)
+      svm.save('opinion-classifier')
 
    def getFeatures(self, data, train=False):
       if train is True:
