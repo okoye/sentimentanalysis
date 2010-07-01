@@ -182,10 +182,10 @@ class OpinionMiner:
 
          words_score[word] = pos_score + neg_score
 
-      #Return 10% most useful words 
+      #Return 1% most useful words 
       self.informative_words = dict(sorted(words_score.iteritems(),
                                  key=lambda (word, score): score,
-                                 reverse=True)[:int(0.1*len(words_score))])
+                                 reverse=True)[:int(0.01*len(words_score))])
 
       self._saveData('informative_words.bin',self.informative_words)
 
@@ -351,8 +351,8 @@ class OpinionMiner:
          elif key in self.positive_adverbs: #mutally exclusive
             pos_adv_score += 1
 
-      pos_adj_score = pos_adj_score/total_adjectives_pos
-      pos_adv_score = pos_adv_score/total_adverbs_pos
+      pos_adj_score = float(pos_adj_score)/float(total_adjectives_pos)
+      pos_adv_score = float(pos_adv_score)/float(total_adverbs_pos)
 
       #Compute scores for negative values
       for key in word_dict:
@@ -361,8 +361,8 @@ class OpinionMiner:
          elif key in self.negative_adverbs:
             neg_adv_score += 1
 
-      neg_adj_score = neg_adj_score/total_adjectives_neg
-      neg_adv_score = neg_adv_score/total_adverbs_neg
+      neg_adj_score = float(neg_adj_score)/float(total_adjectives_neg)
+      neg_adv_score = float(neg_adv_score)/float(total_adverbs_neg)
 
       return (pos_adj_score, pos_adv_score, neg_adj_score, neg_adv_score)
       
