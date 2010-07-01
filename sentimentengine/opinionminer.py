@@ -22,10 +22,12 @@ from nltk.corpus import brown
 from nltk.probability import ConditionalFreqDist, FreqDist
 from nltk.tokenize import word_tokenize
 from nltk.metrics import BigramAssocMeasures
+from nltk.classify import decisiontree
+from nltk.classify.util import accuracy
 from cPickle import dump, load
 from PyML import VectorDataSet, SparseDataSet
-from PyML import SVM
-from PyML.classifiers import loadSVM
+#from PyML import SVM
+#from PyML.classifiers import loadSVM
 from sys import exc_info
 import speechtagger
 import logger
@@ -182,104 +184,71 @@ class OpinionMiner:
 
          words_score[word] = pos_score + neg_score
 
-      #Return 10% most useful words 
+      #Return 0.001% most useful words 
       self.informative_words = dict(sorted(words_score.iteritems(),
                                  key=lambda (word, score): score,
-                                 reverse=True)[:int(0.1*len(words_score))])
+                                 reverse=True)[:int(0.0001*len(words_score))])
 
       self._saveData('informative_words.bin',self.informative_words)
 
    def trainClassifier(self, train_data):
       '''trains a decision tree, svm and naive bayes classifier'''
 
-      #NaiveBayes Classifier
-
-
-      #Support Vector Machine
       feature_set = []
       labels = []
-      for instance in train_data:
-         feat = self.getFeatures(instance, train=True)
-         labels.append(feat[0])
-         feature_set.append(feat[1:len(feat)])
+
+      self.classifier = self._loadData('opinion_classifier.bin')
+      if self.classifier:
+         print 'Loaded saved classifier'
+         return
+      
+      print 'Extracting features from training data'
+      for sentence, label in train_data:
+         feat = self.getFeatures(sentence)
+         feature_set.append((feat,label))
          
-         '''a feature_set is a list consisting of:
-            [label, f1, f2, f3...], [label, f1, f2, f3...]'''
+      #SVM Implementation
+      #vector_data = VectorDataSet(feature_set, L=labels) #Linear Discriminant
+      #svm = SVM() 
+      #svm.train(vector_data, saveSpace=False)
+      #svm.save('opinion-classifier')
 
-      vector_data = VectorDataSet(feature_set, L=labels) #Linear Discriminant
-      svm = SVM() 
-      svm.train(vector_data, saveSpace=False)
-      svm.save('opinion-classifier')
+      #TODO: Remove this implementation for hello chair demo.
+      print feature_set[:10]
+      self.classifier = naivebayes.DecisionTreeClassifier.train(feature_set)
 
-   def getFeatures(self, data, train=False):
-      if train is True:
-         if 1: #Un-necessary!
-            (tag, sentence) = data
-            conjunc = self.getConjunctionFeats(sentence)
-            norm_score = self.computeNormalizedScores(sentence)
-            trans_feat = self.getTransitiveFeatures(sentence)
-            inst_feat = self.getSpecificInstanceFeatures(sentence)
+      self._saveData('opinion_classifier.bin', self.classifier)
+
+   def classify(self, sentence):
+      
+      return self.classifier.classify(self.getFeatures(sentence))
+
+   def getFeatures(self, sentence):
+
+      conjunc = self.getConjunctionFeats(sentence)
+      norm_score = self.computeNormalizedScores(sentence)
+      trans_feat = self.getTransitiveFeatures(sentence)
+      inst_feat = self.getSpecificInstanceFeatures(sentence)
             
-            '''combine all the results into a feature
-               vector of the form:
-               [[label, f1, f2, f3...], [label...]]'''
-            temp = []
+      temp = dict()
 
-            #Class label
-            temp.append(tag)
+      #getConjunctionFeats Result
+      #for value in conjunc.values():
+      #   temp.append(value)
 
-            #getConjunctionFeats Result
-            for value in conjunc.values():
-               temp.append(value)
+      #computeNormalizedScores Result
+      for key in norm_score:
+         temp[key] = norm_score[key]
 
-            #computeNormalizedScores Result
-            for value in norm_score:
-               temp.append(value)
+      #getTransitiveFeatures Result
+      for key in trans_feat:
+         temp[key] = trans_feat[key]
 
-            #getTransitiveFeatures Result
-            for value in trans_feat.values():
-               temp.append(value)
-
-            #getSpecificInstanceFeat Result
-            for value in inst_feat.values():
-               temp.append(value)
-
-            return temp
-
-      elif train is False:
-         for sentence in data:
-            conjunc = getConjunctionFeats(sentence)
-            norm_score = computeNormalizedScores(sentence)
-            trans_feat = getTransitiveFeatures(sentence)
-            inst_feat = getSpecificInstanceFeatures(sentence)
-
-            '''combine all the results into a feature
-               vector of the form:
-               [[f1, f2, f3,...],[f1, f2, f3,...]]'''
-
-            temp = []
-
-            #getConjunctionFeats Result
-            for  value in conjunc.values():
-               temp.append(value)
-
-            #computeNormalizedScores Result
-            for value in norm_score:
-               temp.append(value)
-
-            #getTransitiveFeatures Result
-            for value in trans_feat.values():
-               temp.append(value)
-
-            #getSpecificInstanceFeat Result
-            for value in inst_feat.values():
-               temp.append(value)
-
+      #getSpecificInstanceFeat Result
+      for key in inst_feat:
+         temp[key] = inst_feat[key]
 
       return temp
-
-
-      
 
    @classmethod
    def _saveData(self, filename, data):
@@ -351,8 +320,8 @@ class OpinionMiner:
          elif key in self.positive_adverbs: #mutally exclusive
             pos_adv_score += 1
 
-      pos_adj_score = pos_adj_score/total_adjectives_pos
-      pos_adv_score = pos_adv_score/total_adverbs_pos
+      pos_adj_score = float(pos_adj_score)/float(total_adjectives_pos)
+      pos_adv_score = float(pos_adv_score)/float(total_adverbs_pos)
 
       #Compute scores for negative values
       for key in word_dict:
@@ -360,11 +329,19 @@ class OpinionMiner:
             neg_adj_score += 1
          elif key in self.negative_adverbs:
             neg_adv_score += 1
+      
+      neg_adj_score = float(neg_adj_score)/float(total_adjectives_neg)
+      neg_adv_score = float(neg_adv_score)/float(total_adverbs_neg)
 
-      neg_adj_score = neg_adj_score/total_adjectives_neg
-      neg_adv_score = neg_adv_score/total_adverbs_neg
+      normalized_score = dict()
+      normalized_score = {
+                           "pos_adj":pos_adv_score,
+                           "pos_adv":pos_adv_score,
+                           "neg_adj":neg_adj_score,
+                           "neg_adv":neg_adv_score
+                         }
 
-      return (pos_adj_score, pos_adv_score, neg_adj_score, neg_adv_score)
+      return normalized_score
       
    def getTransitiveFeatures(self, sentence):
       wordlist = set(['however','but','nevertheless','still',

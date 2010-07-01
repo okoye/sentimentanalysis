@@ -13,8 +13,9 @@ dependencies:
 TODO:
 Implement views for all objects whose sentiments have not been extracted.
 Design analytical engine.
-Gather list of modern words like 'WTF'.
-Use support vector machine to predict sentiment.
+Incorporate a third class of sentiments, the Neutral class
+Apply concepts from Dimensionality Reduction.
+Migrate from naive bayes to support vector machine to predict sentiment.
 Test hypothesis of using bounds like 'worst' and 'best' to create segmenting
 attributes based on distance in wordnet and a trained classifier.
 Generate actual product features by clustering.
