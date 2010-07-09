@@ -25,7 +25,6 @@ from nltk.metrics import BigramAssocMeasures
 from cPickle import dump, load
 from PyML import VectorDataSet, SparseDataSet
 from PyML import SVM
-from PyML.classifiers import loadSVM
 from sys import exc_info
 import speechtagger
 import logger
